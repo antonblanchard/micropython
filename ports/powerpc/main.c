@@ -67,6 +67,8 @@ int main(int argc, char **argv) {
 
     uart_init_ppc(argc);
 
+    mp_hal_stdout_tx_strn("Alive", 5);
+
     #if MICROPY_ENABLE_PYSTACK
     static mp_obj_t pystack[1024];
     mp_pystack_init(pystack, &pystack[1024]);

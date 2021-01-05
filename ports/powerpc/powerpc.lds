@@ -5,9 +5,28 @@ SECTIONS
         .head : {
                 KEEP(*(.head))
         }
+        . = ALIGN(0x80);
+        .text : { *(.text) *(.text.*) *(.sfpr) *(.eh_frame) *(.rodata) *(.rodata.*) }
+        . = ALIGN(0x80);
+        .data : { *(.data) *(.data.*) *(.got) *(.toc) }
+        . = ALIGN(0x80);
+        __bss_start = .;
+        .bss : {
+                *(.dynsbss)
+                *(.sbss)
+                *(.scommon)
+                *(.dynbss)
+                *(.bss)
+                *(.common)
+                *(.bss.*)
+        }
+        . = ALIGN(0x80);
+        __bss_end = .;
+        . = . + 0x4000;
+        __stack_top = .;
 
-        /* Put this at 0x1700 which is right after our execption
-         * vectors in head.S.
-         */
-        . = 0x1700;
+        /DISCARD/ :
+        {
+                *(.note.gnu.build-id)
+        }
 }

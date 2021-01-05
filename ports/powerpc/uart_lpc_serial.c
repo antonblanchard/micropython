@@ -33,10 +33,7 @@
 #include <stdbool.h>
 #include "py/mpconfig.h"
 
-#define PROC_FREQ       50000000
-#define UART_FREQ       115200
 #define UART_BASE       0xc0002000
-#define LPC_UART_BASE   0x60300d00103f8
 
 /* Taken from skiboot */
 #define REG_RBR         0
@@ -72,7 +69,7 @@ static uint64_t lpc_uart_base;
 static void lpc_uart_reg_write(uint64_t offset, uint8_t val) {
     uint64_t addr;
 
-    addr = lpc_uart_base + offset;
+    addr = lpc_uart_base + offset*sizeof(uint32_t);
 
     *(volatile uint8_t *)addr = val;
 }
@@ -81,7 +78,7 @@ static uint8_t lpc_uart_reg_read(uint64_t offset) {
     uint64_t addr;
     uint8_t val;
 
-    addr = lpc_uart_base + offset;
+    addr = lpc_uart_base + offset*sizeof(uint32_t);
 
     val = *(volatile uint8_t *)addr;
 
@@ -97,7 +94,7 @@ static int lpc_uart_rx_empty(void) {
 }
 
 void uart_init_ppc(void) {
-    lpc_uart_base = LPC_UART_BASE;
+    lpc_uart_base = UART_BASE;
 }
 
 int mp_hal_stdin_rx_chr(void) {
