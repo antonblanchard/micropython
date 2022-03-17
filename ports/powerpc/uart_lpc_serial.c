@@ -33,24 +33,29 @@
 #include <stdbool.h>
 #include "py/mpconfig.h"
 
-#define PROC_FREQ       50000000
-#define UART_FREQ       115200
-#define UART_BASE       0xc0002000
-#define LPC_UART_BASE   0x60300d00103f8
+#define PROC_FREQ       100000000
+#define UART_BAUDS	115200
+#define LPC_UART_BASE       0xc0002000
 
 /* Taken from skiboot */
 #define REG_RBR         0
 #define REG_THR         0
 #define REG_DLL         0
-#define REG_IER         1
-#define REG_DLM         1
-#define REG_FCR         2
-#define REG_IIR         2
-#define REG_LCR         3
-#define REG_MCR         4
-#define REG_LSR         5
-#define REG_MSR         6
-#define REG_SCR         7
+#define REG_IER         4
+#define REG_DLM         4
+#define REG_FCR         8
+#define   REG_FCR_EN_FIFO  0x01
+#define   REG_FCR_CLR_RCVR 0x02
+#define   REG_FCR_CLR_XMIT 0x04
+#define REG_IIR         8
+#define REG_LCR         12
+#define   REG_LCR_8BIT     0x03
+#define REG_MCR         16
+#define   REG_MCR_DTR      0x01
+#define   REG_MCR_RTS      0x02
+#define REG_LSR         20
+#define REG_MSR         24
+#define REG_SCR         28
 
 #define LSR_DR          0x01  /* Data ready */
 #define LSR_OE          0x02  /* Overrun */
@@ -96,8 +101,21 @@ static int lpc_uart_rx_empty(void) {
     return !(lpc_uart_reg_read(REG_LSR) & LSR_DR);
 }
 
+static unsigned long uart_divisor(unsigned long uart_freq, unsigned long bauds) {
+    return uart_freq / (bauds * 16);
+}
+
 void uart_init_ppc(void) {
+    unsigned long div = uart_divisor(PROC_FREQ, UART_BAUDS);
+
     lpc_uart_base = LPC_UART_BASE;
+
+    lpc_uart_reg_write(REG_LCR, LCR_DLAB);
+    lpc_uart_reg_write(REG_DLL, div & 0xff);
+    lpc_uart_reg_write(REG_DLM, div >> 8);
+    lpc_uart_reg_write(REG_LCR, REG_LCR_8BIT);
+    lpc_uart_reg_write(REG_MCR, REG_MCR_DTR | REG_MCR_RTS);
+    lpc_uart_reg_write(REG_FCR, REG_FCR_EN_FIFO | REG_FCR_CLR_RCVR | REG_FCR_CLR_XMIT);
 }
 
 int mp_hal_stdin_rx_chr(void) {

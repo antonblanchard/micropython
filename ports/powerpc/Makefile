@@ -7,7 +7,7 @@ QSTR_DEFS = qstrdefsport.h
 include $(TOP)/py/py.mk
 
 # potato or lpc_serial
-UART ?= potato
+UART ?= lpc_serial
 
 ARCH = $(shell uname -m)
 ifneq ("$(ARCH)", "ppc64")
